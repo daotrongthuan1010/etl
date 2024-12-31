@@ -1,0 +1,105 @@
+spring:
+  batch:
+    jdbc:
+      initialize-schema: never
+  application:
+    name: demo
+  datasource:
+    # PostgreSQL Source Database Configuration
+    postgres-source:
+      jdbc-url: jdbc:postgresql://localhost:25432/source_db
+      username: dbtest
+      password: password@123
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 2
+        pool-name: HikariCP-PostgresSource
+
+    # PostgreSQL Target Database Configuration
+    postgres-target:
+      jdbc-url: jdbc:postgresql://localhost:25433/target_db
+      username: nosql
+      password: password@123
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 2
+        pool-name: HikariCP-PostgresTarget
+
+    # MySQL Database Configuration
+    mysql:
+      jdbc-url: jdbc:mysql://localhost:3306/source_db?allowPublicKeyRetrieval=true&useSSL=false
+      username: dbtest
+      password: password@123
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 2
+        pool-name: HikariCP-MySQL
+
+
+    # SQL Server Configuration
+    sqlserver:
+      url: jdbc:sqlserver://sqlserver:1433;databaseName=source_db
+      username: sa
+      password: password@123
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 2
+        pool-name: HikariCP-SQLServer
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+    jackson:
+      serialization:
+        FAIL_ON_EMPTY_BEANS: false
+
+  # Logging Configuration
+  logging:
+    level:
+      org.springframework: INFO
+      com.example: DEBUG
+
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: group_id
+      auto-offset-reset: earliest
+    producer:
+      acks: all
+      retries: 3
+
+  # Redis Configuration
+  # Elasticsearch Configuration
+  elasticsearch:
+    rest:
+      uris: http://elasticsearch:9200
+      read-timeout: 5s
+      connection-timeout: 3s
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+logging:
+  level:
+    org.springframework: INFO
+    com.example: DEBUG
+
+server:
+  port: 8080
+
+# Optional: Spring Boot Actuator (useful for monitoring)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

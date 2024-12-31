@@ -1,0 +1,146 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  postgres-source:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: dbtest
+      POSTGRES_PASSWORD: password@123
+      POSTGRES_DB: source_db
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - 25432:5432
+    volumes:
+      - pg_source_data:/var/lib/postgresql/data
+      - ./custom-postgresql.conf:/etc/postgresql/postgresql.conf
+
+  postgres-target:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: nosql
+      POSTGRES_PASSWORD: password@123
+      POSTGRES_DB: target_db
+    ports:
+      - 25433:5432
+    volumes:
+      - pg_target_data:/var/lib/postgresql/data
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password@123
+      MYSQL_DATABASE: source_db
+      MYSQL_USER: dbtest
+      MYSQL_PASSWORD: password@123
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password@123
+      MONGO_INITDB_DATABASE: source_db
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:latest
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: password@123
+      MSSQL_PID: Developer
+    ports:
+      - 1433:1433
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kafka-connect:
+    image: debezium/connect:1.9
+    environment:
+      - "BOOTSTRAP_SERVERS=kafka:9092"
+      - "GROUP_ID=1"
+      - "CONFIG_STORAGE_TOPIC=my_connect_configs"
+      - "OFFSET_STORAGE_TOPIC=my_connect_offsets"
+      - "STATUS_STORAGE_TOPIC=my_connect_statuses"
+      - "PLUGIN_PATH=/usr/share/java,/etc/kafka-connect/jars"
+    volumes:
+      - ./plugins:/etc/kafka-connect/jars
+    ports:
+      - "8083:8083"
+    depends_on:
+      - kafka
+    networks:
+      - debezium_network
+
+  debezium-postgres-connector:
+    image: debezium/example-postgres:2.6
+    environment:
+      - "DATABASE_HOST=postgres-source"
+      - "DATABASE_PORT=5432"
+      - "DATABASE_USER=dbtest"
+      - "DATABASE_PASSWORD=password@123"
+      - "DATABASE_DBNAME=source_db"
+      - "DATABASE_SERVER_NAME=dbserver1"
+      - "DATABASE_INCLUDE_LIST=source_db.public"
+      - "PLUGIN_NAME=pgoutput"
+      - "DATABASE_HISTORY_KAFKA_BOOTSTRAP_SERVERS=kafka:9092"
+      - "DATABASE_HISTORY_KAFKA_TOPIC=dbhistory.source_db"
+    depends_on:
+      - kafka-connect
+    networks:
+      - debezium_network
+
+volumes:
+  pg_source_data:
+  pg_target_data:
+  mysql_data:
+  mongodb_data:
+  sqlserver_data:
+  redis_data:
+  es_data:
+
+networks:
+  debezium_network:
+    driver: bridge
