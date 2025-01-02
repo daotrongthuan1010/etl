@@ -16,6 +16,7 @@ services:
       - 9092:9092
     environment:
       KAFKA_BROKER_ID: 1
+
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -95,29 +96,28 @@ services:
       - 9300:9300
     volumes:
       - es_data:/usr/share/elasticsearch/data
-
   kafka-connect:
     image: debezium/connect:1.9
     environment:
-      - "BOOTSTRAP_SERVERS=kafka:9092"
+      - "BOOTSTRAP_SERVERS=kafka:9092"  # Kết nối Kafka connect đến Kafka container
       - "GROUP_ID=1"
       - "CONFIG_STORAGE_TOPIC=my_connect_configs"
       - "OFFSET_STORAGE_TOPIC=my_connect_offsets"
       - "STATUS_STORAGE_TOPIC=my_connect_statuses"
       - "PLUGIN_PATH=/usr/share/java,/etc/kafka-connect/jars"
     volumes:
-      - ./plugins:/etc/kafka-connect/jars
+      - ./plugins:/etc/kafka-connect/jars  # Mount plugin jar từ host vào container
     ports:
-      - "8083:8083"
+      - "8083:8083"  # Mở port để Kafka Connect UI có thể truy cập từ bên ngoài
     depends_on:
-      - kafka
+      - kafka  # Kafka Connect phải đợi Kafka chạy trước
     networks:
-      - debezium_network
+      - debezium_network  # Sử dụng cùng một mạng Docker
 
   debezium-postgres-connector:
     image: debezium/example-postgres:2.6
     environment:
-      - "DATABASE_HOST=postgres-source"
+      - "DATABASE_HOST=postgres-source"  # Địa chỉ PostgreSQL source DB
       - "DATABASE_PORT=5432"
       - "DATABASE_USER=dbtest"
       - "DATABASE_PASSWORD=password@123"
@@ -125,12 +125,12 @@ services:
       - "DATABASE_SERVER_NAME=dbserver1"
       - "DATABASE_INCLUDE_LIST=source_db.public"
       - "PLUGIN_NAME=pgoutput"
-      - "DATABASE_HISTORY_KAFKA_BOOTSTRAP_SERVERS=kafka:9092"
+      - "DATABASE_HISTORY_KAFKA_BOOTSTRAP_SERVERS=kafka:9092"  # Kết nối tới Kafka
       - "DATABASE_HISTORY_KAFKA_TOPIC=dbhistory.source_db"
     depends_on:
-      - kafka-connect
+      - kafka-connect  # Đảm bảo Kafka Connect đã chạy trước khi connector này chạy
     networks:
-      - debezium_network
+      - debezium_network  # Sử dụng cùng mạng Docker
 
 volumes:
   pg_source_data:

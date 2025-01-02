@@ -76,6 +76,8 @@ spring:
     producer:
       acks: all
       retries: 3
+    networks:
+      - debezium_network
 
   # Redis Configuration
   # Elasticsearch Configuration
