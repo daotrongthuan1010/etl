@@ -3,7 +3,16 @@ spring:
     jdbc:
       initialize-schema: never
   application:
-    name: demo
+    name: student-face-id
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus
+    metrics:
+      export:
+        prometheus:
+          enabled: true
   datasource:
     # PostgreSQL Source Database Configuration
     postgres-source:
@@ -68,16 +77,19 @@ spring:
 
 
   # Kafka Configuration
-  kafka:
-    bootstrap-servers: kafka:9092
-    consumer:
-      group-id: group_id
-      auto-offset-reset: earliest
-    producer:
-      acks: all
-      retries: 3
-    networks:
-      - debezium_network
+  spring:
+    kafka:
+      bootstrap-servers: kafka:9092
+      consumer:
+        group-id: debezium-consumer-group
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto-offset-reset: earliest
+      producer:
+        acks: all
+        retries: 3
+      listener:
+        missing-topics-fatal: false
 
   # Redis Configuration
   # Elasticsearch Configuration
