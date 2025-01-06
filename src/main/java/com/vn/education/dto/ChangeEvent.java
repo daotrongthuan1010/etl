@@ -13,7 +13,7 @@ public class ChangeEvent {
     private Map<String, Object> after;   // Sau khi thay đổi
     private Long timestamp;
     private String tableName;
-    private String schema;   // Thông tin schema thay đổi
+    private String schema;
 
     public ChangeEvent(String operation, Map<String, Object> before, Map<String, Object> after,
                        Long timestamp, String tableName, String schema) {

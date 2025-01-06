@@ -23,5 +23,13 @@ public class StudentRepositoryImpl implements StudentRepositoryCustom {
         query.setParameter("criteria", criteria);
         return query.getResultList();
     }
+
+//    @Override
+//    public Optinonal<Student> findStudentById(Long id) {
+//
+//        String jpql = "SELECT s FROM Student s WHERE s.id = :id";
+//        TypedQuery<Student> query = entityManager.createQuery(jpql, Student.class);
+//        return query.getSingleResult().getOptional();
+//    }
 }
 
