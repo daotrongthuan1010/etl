@@ -18,16 +18,5 @@ public class ChatBotController {
 
     private final RestTemplate restTemplate;
 
-    @GetMapping("/webcam")
-    public String getWebCamPage() {
-        // URL của trang web chứa demo webcam
-        String apiUrl = "https://vladmandic.github.io/face-api/demo/webcam.html";
 
-        // Sử dụng RestTemplate để gọi trang web
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.getForEntity(apiUrl, String.class);
-
-        // Trả về nội dung HTML từ trang web
-        return response.getBody();
-    }
 }

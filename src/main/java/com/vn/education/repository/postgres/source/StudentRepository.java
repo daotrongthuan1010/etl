@@ -10,13 +10,5 @@ import java.util.Optional;
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
-//    @Override
-//    int save(Student student);
-//
-//    @Override
-//    List<Student> findAll();
-//
-//    @Override
-//    Optional<Student> findById(Long aLong);
 }
 

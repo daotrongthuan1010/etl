@@ -1,18 +1,22 @@
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 2181:2181
+    networks:
+      - debezium_network
 
   kafka:
     image: confluentinc/cp-kafka:latest
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
-      - 9092:9092
+      - "9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -21,6 +25,25 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - debezium_network
+
+  kafka-connect:
+    image: debezium/connect:1.9
+    container_name: kafka-connect
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092  # hoặc địa chỉ IP của Kafka nếu cần
+      CONNECT_REST_ADVERTISED_LISTENER: http://localhost:8083
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: "_connect-configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "_connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "_connect-status"
+    volumes:
+        - ./plugins:/etc/kafka-connect/jars
+    ports:
+        - 8083:8083
+    depends_on:
+        - kafka
+    networks:
+        - debezium_network
 
   postgres-source:
     image: postgres:latest
@@ -97,23 +120,6 @@ services:
       - 9300:9300
     volumes:
       - es_data:/usr/share/elasticsearch/data
-  kafka-connect:
-    image: debezium/connect:1.9
-    environment:
-      - "BOOTSTRAP_SERVERS=kafka:9092"  # Kết nối Kafka connect đến Kafka container
-      - "GROUP_ID=1"
-      - "CONFIG_STORAGE_TOPIC=my_connect_configs"
-      - "OFFSET_STORAGE_TOPIC=my_connect_offsets"
-      - "STATUS_STORAGE_TOPIC=my_connect_statuses"
-      - "PLUGIN_PATH=/usr/share/java,/etc/kafka-connect/jars"
-    volumes:
-      - ./plugins:/etc/kafka-connect/jars  # Mount plugin jar từ host vào container
-    ports:
-      - "8083:8083"  # Mở port để Kafka Connect UI có thể truy cập từ bên ngoài
-    depends_on:
-      - kafka  # Kafka Connect phải đợi Kafka chạy trước
-    networks:
-      - debezium_network  # Sử dụng cùng một mạng Docker
 
   debezium-postgres-connector:
     image: debezium/example-postgres:2.6
